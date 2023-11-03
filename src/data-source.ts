@@ -18,7 +18,8 @@ import { Nations } from "./admission/entities/Nations";
 import { ObjectAdmission } from "./admission/entities/ObjectAdmission";
 import { MajorStatistic } from "./report/major-statistics";
 import { Rules } from "./core/entities/Rules";
-import { Rule } from "./report/Rules";
+import { Rule } from "./report/rules";
+import { Certificates } from "./core/entities/Certificates";
 
 export const CoreDB = new DataSource({
   type: "mysql",
@@ -38,6 +39,7 @@ export const CoreDB = new DataSource({
     Files,
     SubMajors,
     Rules,
+    Certificates,
   ],
   subscribers: [],
   migrations: [],

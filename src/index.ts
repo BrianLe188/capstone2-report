@@ -7,7 +7,7 @@ import { SubMajors } from "./core/entities/SubMajors";
 import { MajorStatistic } from "./report/major-statistics";
 import { MoreThan } from "typeorm";
 import { Rules } from "./core/entities/Rules";
-import { Rule } from "./report/Rules";
+import { Rule } from "./report/rules";
 
 const majorRepo = CoreDB.getRepository(Majors);
 const subMajorRepo = CoreDB.getRepository(SubMajors);
@@ -36,7 +36,7 @@ async function main() {
     });
   ReportDB.initialize()
     .then(() => {
-      console.log(`Admission database available`);
+      console.log(`Report database available`);
     })
     .catch((error) => {
       console.log(error);
@@ -96,6 +96,37 @@ async function main() {
       })
     );
     res.send(true);
+  });
+
+  app.get("/update-submajor", async () => {
+    const submajors = await subMajorRepo.find({
+      relations: {
+        certificates: true,
+      },
+    });
+    Promise.all(
+      submajors.map(async (item) => {
+        const majorstatistic = await majorStatisticRepo.findOne({
+          where: {
+            majorName: item.name,
+          },
+        });
+        if (majorstatistic && item.certificates?.length > 0) {
+          majorstatistic.graduationRequirements = item.certificates.reduce(
+            (prev, next, index) => {
+              let result = prev + next.name;
+              if (index !== item.certificates.length - 1) {
+                result += " hoặc ";
+              }
+              return result;
+            },
+            ""
+          );
+          await majorStatisticRepo.save(majorstatistic);
+        }
+      })
+    );
+    return true;
   });
 
   app.get("/import-rule", async (req, res) => {

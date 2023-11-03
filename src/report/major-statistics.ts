@@ -31,4 +31,7 @@ export class MajorStatistic {
 
   @Column({ type: "float", default: 0 })
   acceptanceRate: number;
+
+  @Column({ type: "text" })
+  graduationRequirements: string;
 }

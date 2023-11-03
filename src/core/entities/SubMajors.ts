@@ -1,5 +1,13 @@
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+} from "typeorm";
 import { Majors } from "./Majors";
+import { Certificates } from "./Certificates";
 
 @Entity("sub_majors", { schema: "capstone2-core" })
 export class SubMajors {
@@ -30,4 +38,15 @@ export class SubMajors {
   })
   @JoinColumn([{ name: "majorId", referencedColumnName: "id" }])
   major: Majors;
+
+  @ManyToMany(() => Certificates, (certificates) => certificates.subMajors)
+  @JoinTable({
+    name: "sub_majors_graduation_requirements_certificates",
+    joinColumns: [{ name: "subMajorsId", referencedColumnName: "id" }],
+    inverseJoinColumns: [
+      { name: "certificatesId", referencedColumnName: "id" },
+    ],
+    schema: "capstone2-core",
+  })
+  certificates: Certificates[];
 }
