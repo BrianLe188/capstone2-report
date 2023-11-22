@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { AdmissionDB, CoreDB, ReportDB } from "./data-source";
-import express from "express";
+import express, { response } from "express";
 import { Majors } from "./core/entities/Majors";
 import { ApplicationAdmissionRegistration } from "./admission/entities/ApplicationAdmissionRegistration";
 import { SubMajors } from "./core/entities/SubMajors";
@@ -42,6 +42,24 @@ async function main() {
       console.log(error);
     });
 
+  app.get("/rules", async (req, res) => {
+    try {
+      const rules = await ruleReportRepo.find();
+      if (rules) {
+        res.status(200).json(rules);
+      }
+    } catch (error) {}
+  });
+
+  app.get("/statistics", async (req, res) => {
+    try {
+      const statistics = await majorStatisticRepo.find();
+      if (statistics) {
+        res.status(200).json(statistics);
+      }
+    } catch (error) {}
+  });
+
   app.get("/status", async (req, res) => {
     const subMajors = await subMajorRepo.find();
     Promise.all(
@@ -65,7 +83,7 @@ async function main() {
     res.send(true);
   });
 
-  app.get("/", async (req, res) => {
+  app.get("/statistic-submajor", async (req, res) => {
     const subMajors = await subMajorRepo.find();
     Promise.all(
       subMajors.map(async (sub) => {
