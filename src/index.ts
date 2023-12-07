@@ -1,6 +1,8 @@
 import "reflect-metadata";
+import dotenv from "dotenv";
+dotenv.config();
 import { AdmissionDB, CoreDB, ReportDB } from "./data-source";
-import express, { response } from "express";
+import express from "express";
 import { Majors } from "./core/entities/Majors";
 import { ApplicationAdmissionRegistration } from "./admission/entities/ApplicationAdmissionRegistration";
 import { SubMajors } from "./core/entities/SubMajors";
@@ -8,7 +10,11 @@ import { MajorStatistic } from "./report/major-statistics";
 import { MoreThan } from "typeorm";
 import { Rules } from "./core/entities/Rules";
 import { Rule } from "./report/rules";
+import { client } from "./mongodb";
+import multer from "multer";
+import xlsx from "xlsx";
 
+const upload = multer();
 const majorRepo = CoreDB.getRepository(Majors);
 const subMajorRepo = CoreDB.getRepository(SubMajors);
 const registrationRepo = AdmissionDB.getRepository(
@@ -20,6 +26,9 @@ const ruleReportRepo = ReportDB.getRepository(Rule);
 
 async function main() {
   const app = express();
+  const mongodb = client.db("capstone2-message");
+  const QACollection = mongodb.collection("qa");
+
   CoreDB.initialize()
     .then(() => {
       console.log(`Core database available`);
@@ -158,6 +167,25 @@ async function main() {
       })
     );
     res.send(true);
+  });
+
+  app.get("/qa", async (req, res) => {
+    try {
+      const qa = await QACollection.find().toArray();
+      res.status(200).json(qa);
+    } catch (error) {}
+  });
+
+  app.post("/import-qa", upload.single("file"), async (req, res) => {
+    try {
+      const file = req.file;
+      const workbook = xlsx.read(file?.buffer, { type: "buffer" });
+      const worksheet = workbook.Sheets["Sheet1"];
+      const data: { question: string; answer: string }[] =
+        xlsx.utils.sheet_to_json(worksheet, { header: 0 });
+      QACollection.insertMany(data);
+      res.status(200).json("Done");
+    } catch (error) {}
   });
 
   app.listen(1111, () => {});
